@@ -1,5 +1,8 @@
 const express = require("express");
 const tasks = require("../services/todo");
+const {
+    ErrorHandler
+} = require('../helpers/error')
 const router = express.Router();
 
 
@@ -11,7 +14,7 @@ router.get("/:id", (req, res, next) => {
     const taskId = req.params.id;
     const task = tasks.find((task) => parseInt(taskId) === task.id);
     if (!task) {
-        return next(new Error(`Not task with ${taskId} found`));
+        throw new ErrorHandler(404, `Cannot find task with id ${taskId}`);
     }
     res.send(task);
 
@@ -27,16 +30,12 @@ router.post("/add", async(req, res, next) => {
         };
 
         if (JSON.stringify(req.body) === "{}") {
-            return res.status(400).send({
-                error: true,
-                message: "name or done is empty or invalid",
-            });
+            throw new ErrorHandler(400, 'No empty fields is allowed')
         }
         console.log(newTask);
         tasks.push(newTask);
         res.status(201).json(newTask);
     } catch (error) {
-        error.message = "Unabled to add new task";
         next(error);
     }
 });
